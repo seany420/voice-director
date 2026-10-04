@@ -190,9 +190,9 @@ test('zip: crc32 matches known value and archives extract with unzip', () => {
   assert.equal(crc32(new TextEncoder().encode('hello world')), 0x0d4a1185);
   const dir = mkdtempSync(join(tmpdir(), 'vd-'));
   writeFileSync(join(dir, 'a.zip'), zip([{ name: 'folder/é.txt', data: 'hi' }, { name: 'b.txt', data: new Uint8Array([1, 2, 3]) }]));
-  const list = execFileSync('unzip', ['-l', join(dir, 'a.zip')]).toString();
-  assert.match(list, /folder\/é\.txt/);
-  execFileSync('unzip', ['-t', join(dir, 'a.zip')]);
+  // Python's zipfile honors the UTF-8 name flag regardless of the system locale.
+  const names = execFileSync('python3', ['-c', 'import sys,zipfile;z=zipfile.ZipFile(sys.argv[1]);assert z.testzip() is None;print("|".join(z.namelist()))', join(dir, 'a.zip')]).toString().trim();
+  assert.equal(names, 'folder/é.txt|b.txt');
 });
 
 for (const kind of Object.keys(KINDS)) {
