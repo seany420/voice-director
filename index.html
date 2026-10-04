@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Director">
+<meta name="theme-color" content="#0d0c0b">
+<meta name="description" content="Talk it out. Voice Director sorts your raw dictation into screenplays, novels, memoir, essays, and papers, in your own words.">
+<title>Voice Director</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Courier+Prime&family=Inter:wght@400;500;600;700&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<header id="top">
+  <button id="btnProjects" class="ghost hdr-title" aria-label="Switch project">
+    <span id="hdrIcon">🎬</span>
+    <span class="hdr-text"><strong id="hdrTitle">Voice Director</strong><small id="hdrSub">Talk it out</small></span>
+    <span class="chev">▾</span>
+  </button>
+  <button id="btnSettings" class="ghost icon" aria-label="Settings">⚙︎</button>
+</header>
+
+<div id="jobBar" hidden><span class="spin"></span><span id="jobText">Directing…</span><button id="jobCancel" class="ghost small">Stop</button></div>
+
+<main>
+  <!-- HOME: project list -->
+  <section id="v-home">
+    <div class="hero">
+      <h1>Say it messy.</h1>
+      <p>Talk through a scene, a chapter, an argument. The Director sorts it into the right shape and keeps your words.</p>
+    </div>
+    <button id="btnNewProject" class="primary wide">+ New project</button>
+    <div id="projectList" class="list"></div>
+    <div class="row gap center mt">
+      <button id="btnRestore" class="ghost small">Restore a backup</button>
+      <button id="btnBackupAll" class="ghost small">Back up everything</button>
+    </div>
+  </section>
+
+  <!-- RECORD -->
+  <section id="v-record">
+    <div class="modes seg" role="tablist">
+      <button data-mode="live" class="on">🎙 Live</button>
+      <button data-mode="type">⌨︎ Type</button>
+      <button data-mode="paste">📋 Paste</button>
+    </div>
+
+    <div id="liveBox">
+      <div class="stage">
+        <button id="btnRec" class="rec" aria-label="Record"><span class="dot"></span></button>
+        <div class="stage-meta">
+          <div id="recTime" class="time">0:00</div>
+          <div id="recState" class="muted">Tap to start</div>
+          <canvas id="meter" width="240" height="36" aria-hidden="true"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <p id="typeHint" class="muted small" hidden>Tap the 🎙 on your iPhone keyboard and talk. iOS dictation punctuates as you go and handles long stretches well. Cue words below still work.</p>
+    <textarea id="takeText" placeholder="Your words land here. You can fix anything before the Director sees it." rows="9"></textarea>
+
+    <div class="row gap wrap">
+      <button id="btnDirect" class="primary">Save & direct</button>
+      <button id="btnSaveTake" class="ghost">Save take only</button>
+      <button id="btnDiscard" class="ghost danger">Discard</button>
+    </div>
+
+    <details class="cues card">
+      <summary>Cue words you can say while talking</summary>
+      <ul>
+        <li><b>“New scene”</b> / “new chapter” / “new section”: start a new unit</li>
+        <li><b>“Scratch that”</b>: drops the sentence you just said</li>
+        <li><b>“Note to self …”</b>: a margin note, never prose</li>
+        <li><b>“Verbatim … end verbatim”</b>: those words go in exactly, untouched</li>
+        <li><b>“Character note”</b>, “setting note”, “idea note”, “source note”: bible material</li>
+        <li><b>“New paragraph”</b>: a paragraph break</li>
+      </ul>
+    </details>
+
+    <h2 class="sec">Takes <span id="takeCount" class="muted"></span></h2>
+    <div class="row gap wrap">
+      <button id="btnProcessAll" class="ghost small">Direct all new takes</button>
+      <button id="btnRebuild" class="ghost small">Rebuild project from all takes</button>
+    </div>
+    <div id="takeList" class="list"></div>
+  </section>
+
+  <!-- DRAFT -->
+  <section id="v-draft">
+    <div class="row between center">
+      <div>
+        <h2 id="draftTitle" class="sec flush">Draft</h2>
+        <div id="draftStats" class="muted small"></div>
+      </div>
+      <label class="toggle small"><input type="checkbox" id="showGuard" checked> Guard marks</label>
+    </div>
+    <p id="logline" class="logline" contenteditable="true" spellcheck="true" data-placeholder="Logline appears here after your first take."></p>
+    <div id="draft"></div>
+    <button id="btnAddUnit" class="ghost wide mt">+ Add an empty unit</button>
+  </section>
+
+  <!-- BIBLE -->
+  <section id="v-bible">
+    <h2 class="sec">Bible</h2>
+    <p class="muted small">Everything the Director has learned about your world from what you've said. Edit anything. Your edits win.</p>
+    <input id="bibleSearch" type="search" placeholder="Search names, details…">
+    <div id="bible"></div>
+  </section>
+
+  <!-- ARC -->
+  <section id="v-arc">
+    <h2 class="sec">Structure</h2>
+    <p class="muted small">Where each piece sits in the shape of the whole. Tap a unit to move it to a different beat.</p>
+    <div id="arc"></div>
+
+    <h2 class="sec">Director's notes</h2>
+    <div id="questions" class="list"></div>
+
+    <h2 class="sec">Ask the Director</h2>
+    <div class="card">
+      <textarea id="askText" rows="3" placeholder="What's missing from the middle? Who disappears after chapter 2? Where does this drag?"></textarea>
+      <div class="row gap"><button id="btnAsk" class="primary">Ask</button><button id="btnAskVoice" class="ghost">🎙</button></div>
+      <div id="askAnswer" class="answer" hidden></div>
+    </div>
+  </section>
+
+  <!-- VOICE -->
+  <section id="v-voice">
+    <h2 class="sec">Voice Guard</h2>
+    <div id="guardSummary" class="stats"></div>
+    <div id="guardList" class="list"></div>
+    <button id="btnFixDashes" class="ghost small">Fix every em dash in the draft</button>
+
+    <h2 class="sec">Your fingerprint</h2>
+    <p class="muted small">Paste pieces you've written (a Substack post, a chapter, a journal page). The Director measures how you write and matches it when it cleans up your speech. Samples stay on this phone and go to Claude only as reference.</p>
+    <div id="fingerprint" class="card mono small"></div>
+    <div id="samples" class="list"></div>
+    <div class="row gap wrap">
+      <button id="btnAddSample" class="ghost">+ Paste a sample</button>
+      <button id="btnUploadSample" class="ghost">+ From a file</button>
+    </div>
+    <input type="file" id="sampleFile" accept=".txt,.md,.markdown,.fountain,.rtf,text/plain" multiple hidden>
+
+    <h2 class="sec">Rules the Director follows</h2>
+    <label>Style rules (one per line)</label>
+    <textarea id="voiceRules" rows="7"></textarea>
+    <label>Banned words (comma separated)</label>
+    <textarea id="voiceWords" rows="3"></textarea>
+    <label>Banned phrases (comma separated)</label>
+    <textarea id="voicePhrases" rows="3"></textarea>
+    <div class="row gap"><button id="btnSaveVoice" class="primary">Save rules</button><button id="btnResetVoice" class="ghost small">Reset to defaults</button></div>
+  </section>
+
+  <!-- EXPORT -->
+  <section id="v-export">
+    <h2 class="sec">Export</h2>
+    <p class="muted small">Files go to the share sheet: Save to Files, AirDrop to your Mac, or straight into another app.</p>
+    <div class="card opts">
+      <label class="toggle"><input type="checkbox" id="optTitles"> Working titles for each scene / section</label>
+      <label class="toggle"><input type="checkbox" id="optNotes"> Notes, TKs, and citation flags</label>
+      <label class="toggle"><input type="checkbox" id="optBridges"> Highlight words the Director added</label>
+      <label class="toggle"><input type="checkbox" id="optBible"> Append the bible</label>
+    </div>
+    <div id="formats" class="list"></div>
+    <details class="card mt"><summary>All formats</summary><div id="formatsMore" class="list"></div></details>
+  </section>
+</main>
+
+<nav id="tabs" hidden>
+  <button data-v="record" class="on"><span>🎙</span>Record</button>
+  <button data-v="draft"><span>📝</span>Draft</button>
+  <button data-v="bible"><span>📇</span>Bible</button>
+  <button data-v="arc"><span>📈</span>Arc</button>
+  <button data-v="voice"><span>🗣</span>Voice</button>
+  <button data-v="export"><span>📤</span>Export</button>
+</nav>
+
+<!-- Sheets (modal) -->
+<div id="sheet" class="sheet" hidden>
+  <div class="sheet-card" role="dialog" aria-modal="true">
+    <div class="sheet-head"><h3 id="sheetTitle"></h3><button id="sheetClose" class="ghost icon" aria-label="Close">✕</button></div>
+    <div id="sheetBody"></div>
+  </div>
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+<div id="printArea"></div>
+<input type="file" id="restoreFile" accept="application/json,.json" hidden>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
